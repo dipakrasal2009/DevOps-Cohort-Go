@@ -33,7 +33,7 @@ func printStatus(s Service) {
 
 func main(){
   fmt.Println("hello, structs")
-
+  
   services := []Service{
     {Name: "gateway",  Port: 8080  , Healthy: true },
     {Name: "postgres",  Port: 5432 , Healthy: false },
@@ -43,6 +43,3 @@ func main(){
   
   for _, svc := range services {
     printStatus(svc)
-  }  
-
-}
