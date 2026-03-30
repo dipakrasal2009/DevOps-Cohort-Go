@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
-	"healthcheck/models"
+	"github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck/models"
+
 )
 
 // Function to print service status

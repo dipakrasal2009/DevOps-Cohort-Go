@@ -1,4 +1,3 @@
-module github.com/ShubhamRasal/go-practice/devops-healthcheck
 
 go 1.25.0
 
