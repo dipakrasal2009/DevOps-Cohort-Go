@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/dipakrasal2009/DevOps-Cohort-Go/tree/main/devops-healthcheck/colorprint"
-	"github.com/dipakrasal2009/DevOps-Cohort-Go/tree/main/devops-healthcheck/models"
-)
+  "github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck/colorprint"
+  "github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck/models")
 
 func main() {
 
