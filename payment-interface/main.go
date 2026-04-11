@@ -1,19 +1,24 @@
 package main
 
 import (
-        "fmt"
-        "github.com/dipakrasal2009/DevOps-Cohort-GO/payment-interface/pkg/upi"
+    "fmt"
 
-func Checkout(method payments,PaymentMethod, amount float64) string {
-string  msg := method.pay(amount)
-  return msg
+    "github.com/dipakrasal2009/DevOps-Cohort-Go/payment-interface/pkg"
+    "github.com/dipakrasal2009/DevOps-Cohort-Go/payment-interface/pkg/UPI"
+)
 
+func Checkout(method pkg.PaymentMethod, amount float64) string {
+    return method.Pay(amount)
 }
 
 func main() {
-  fmt.Println("payment interface example")
+    fmt.Println("payment interface example")
 
-  dipakUPI := upi.UPIPayment{UpiID: "dipak@okhdfc",App: Gpay}
-  msg = Checkout(dipakUPI, 50.55)
-  fmt.Println("payment successful : %s", msg)
+    dipakUPI := upi.UPIPayment{
+        UpiID: "dipak@okhdfc",
+        App:   "Gpay",
+    }
+
+    msg := Checkout(dipakUPI, 50.55)
+    fmt.Printf("payment successful: %s\n", msg)
 }

@@ -1,4 +1,5 @@
-package main
+package pkg
 
 type PaymentMethod interface {
   Pay( amount float64) string
+}

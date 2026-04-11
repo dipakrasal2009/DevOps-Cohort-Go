@@ -2,7 +2,7 @@ package upi
 
 import "fmt"
 
-type UPTPayment struct {
+type UPIPayment struct {
   UpiID string
   App string
 }
