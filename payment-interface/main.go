@@ -26,7 +26,7 @@ func main() {
       UpiID: "yash@okhdfc",
       App:   "Gpay",
     }
-    msg1 := Checkout(yashrajUPI, 50.55)
+    msg1 := Checkout(yashrajUPI, 50)
     fmt.Printf("payment successful: %s\n", msg1)
 
 }
