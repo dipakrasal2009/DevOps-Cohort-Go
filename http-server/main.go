@@ -23,37 +23,32 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
-	log.Println("request: ", r.Method, r.URL.Path, r.URL.RawQuery, r.Header, r.ContentLength, r.Host, r.Body)
+	// log.Println("request: ", r.Method, r.URL.Path, r.URL.RawQuery, r.Header, r.ContentLength, r.Host, r.Body)
 	log.Println("body data: ", string(body))
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello from http-server demo"))
+	w.Write([]byte("Hello from http-server demo\n"))
 
-	// fmt.Println("==== Incoming request ==== ")
-	// fmt.Println("method: ", r.Method)
-	// fmt.Println("path: ", r.URL.Path)
-	// fmt.Println("query: ", r.URL.RawQuery)
-	// fmt.Println("headers: ", r.Header)
-	// fmt.Println("content length: ", r.ContentLength)
-	// fmt.Println("host: ", r.Host)
-	// fmt.Println("body: ", r.Body)
-	// //add some more info about the request
-	// fmt.Println("remote address: ", r.RemoteAddr)
-	// fmt.Println("request URI: ", r.RequestURI)
-	// fmt.Println("protocol: ", r.Proto)
-	// fmt.Println("user agent: ", r.UserAgent())
-	// fmt.Println("referer: ", r.Referer())
+	fmt.Println("==== Incoming request ==== ")
+	fmt.Println("method: ", r.Method)
+	fmt.Println("path: ", r.URL.Path)
+	fmt.Println("query: ", r.URL.RawQuery)
+	fmt.Println("headers: ", r.Header)
+	fmt.Println("content length: ", r.ContentLength)
+	fmt.Println("host: ", r.Host)
+	fmt.Println("body: ", r.Body)
+	//add some more info about the request
+	fmt.Println("remote address: ", r.RemoteAddr)
+	fmt.Println("request URI: ", r.RequestURI)
+	fmt.Println("protocol: ", r.Proto)
+	fmt.Println("user agent: ", r.UserAgent())
+	fmt.Println("referer: ", r.Referer())
 
-	// body, err := io.ReadAll(r.Body)
-	// if err != nil {
-	// 	fmt.Println("error reading body: ", err)
-	// 	return
-	// }
-	// fmt.Println("body data: ", string(body))
+	fmt.Println("body data: ", string(body))
 
-	// w.WriteHeader(400)
-	// fmt.Fprintln(w, "Helo From http-server demo")
+	w.WriteHeader(400)
+	fmt.Fprintln(w, "\nHelo From http-server demo\n")
 }
 
 func main() {
