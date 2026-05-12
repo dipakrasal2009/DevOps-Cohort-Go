@@ -1,16 +1,14 @@
-package utils
+package colorprint
 
 import (
 	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck/models"
-
+	"github.com/fatih/color"
 )
 
-// Function to print service status
+// PrintStatus prints the service health status with color.
 func PrintStatus(s models.Service) {
-
 	status := "Healthy"
 
 	if !s.Healthy {
