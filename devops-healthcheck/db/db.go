@@ -68,6 +68,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -75,7 +76,16 @@ import (
 var DB *sql.DB
 
 func Init() {
-	connStr := "host=localhost port=5432 user=admin password=admin123 dbname=healthcheck sslmode=disable"
+	host := os.Getenv("DB_HOST")
+	if host == "" {
+		host = "localhost" // default for local development
+	}
+
+	connStr := fmt.Sprintf(
+		"host=%s port=5432 user=admin password=admin123 dbname=healthcheck sslmode=disable",
+		host,
+	)
+
 	var err error
 	DB, err = sql.Open("postgres", connStr)
 	if err != nil {

@@ -61,6 +61,8 @@ func getAllServicesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Query all services from DB
+
 	rows, err := db.DB.Query(`SELECT id, name, url, healthy, timestamp FROM services`)
 	if err != nil {
 		http.Error(w, "Error querying DB: "+err.Error(), http.StatusInternalServerError)
