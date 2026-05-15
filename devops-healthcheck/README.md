@@ -11,6 +11,8 @@ devops-healthcheck/
 ├── main.go               # HTTP server & route handlers
 ├── go.mod
 ├── go.sum
+├── Dockerfile            # Multi-stage Docker build
+├── docker-compose.yml    # App + PostgreSQL together
 ├── db/
 │   └── db.go             # PostgreSQL connection & table setup
 ├── models/
@@ -25,10 +27,45 @@ devops-healthcheck/
 
 - [Go](https://golang.org/dl/) 1.21+
 - [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
 
 ---
 
-## 🐘 Step 1 — Start PostgreSQL in Docker
+## 🐳 Run with Docker Compose (Recommended)
+
+This is the easiest way — it starts both the Go app and PostgreSQL together.
+
+```bash
+# Build and start everything
+docker-compose up --build
+
+# Run in background
+docker-compose up --build -d
+
+# Check logs
+docker-compose logs -f
+
+# Stop everything
+docker-compose down
+
+# Stop and delete volumes (fresh DB)
+docker-compose down -v
+```
+
+Expected output:
+```
+devops-pg           | database system is ready to accept connections
+devops-healthcheck  | 🚀 DevOps Health Check System
+devops-healthcheck  | ✅ Connected to PostgreSQL
+devops-healthcheck  | ✅ Table ready
+devops-healthcheck  | Server running on localhost:8080
+```
+
+---
+
+## 🖥️ Run Locally (Without Docker)
+
+### Step 1 — Start PostgreSQL in Docker
 
 ```bash
 docker run --name devops-pg \
@@ -39,35 +76,16 @@ docker run --name devops-pg \
   -d postgres
 ```
 
-Verify the container is running:
-
-```bash
-docker ps
-```
-
----
-
-## 📦 Step 2 — Install Dependencies
+### Step 2 — Install Dependencies
 
 ```bash
 go mod tidy
 ```
 
----
-
-## ▶️ Step 3 — Run the Application
+### Step 3 — Run the Application
 
 ```bash
 go run main.go
-```
-
-Expected output:
-
-```
-🚀 DevOps Health Check System
-✅ Connected to PostgreSQL
-✅ Table ready
-Server running on localhost:8080
 ```
 
 ---
@@ -158,22 +176,48 @@ CREATE TABLE IF NOT EXISTS services (
 
 ---
 
-## 🧹 Cleanup
+## 🐳 Docker Details
 
-```bash
-docker stop devops-pg
-docker rm devops-pg
-```
+### Dockerfile (Multi-stage build)
+
+| Stage | Base Image | Purpose |
+|-------|-----------|---------|
+| builder | `golang:1.21-alpine` | Compiles the Go binary |
+| run | `alpine:latest` | Runs the binary (~15MB final image) |
+
+### docker-compose.yml Services
+
+| Service | Image | Port |
+|---------|-------|------|
+| `postgres` | `postgres:latest` | 5432 |
+| `app` | built from `Dockerfile` | 8080 |
+
+The app reads `DB_HOST` from the environment variable set in `docker-compose.yml`. When running locally without Docker it falls back to `localhost`.
 
 ---
 
 ## 🔧 Troubleshooting
 
+**App can't reach database (`connection refused`)**
+Make sure `db.go` reads `DB_HOST` from env and force rebuild:
+```bash
+docker-compose down
+docker-compose up --build
+```
+
 **Table constraint error (`42P10`)**
-The old table exists without the `UNIQUE` constraint. Drop and recreate it:
+The old table exists without the `UNIQUE` constraint. Drop and recreate:
 ```bash
 docker exec -it devops-pg psql -U admin -d healthcheck -c "DROP TABLE IF EXISTS services;"
-# Then restart: go run main.go
+# Then restart
+docker-compose down && docker-compose up --build
+```
+
+**Old volume data causing PostgreSQL errors**
+Delete the volume and start fresh:
+```bash
+docker-compose down -v
+docker-compose up --build
 ```
 
 **Module path error**
