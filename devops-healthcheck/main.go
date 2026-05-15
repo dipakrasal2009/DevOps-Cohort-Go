@@ -7,11 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck/db"
 	"github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck/models"
 )
-
-// services acts as an in-memory store
-var services map[string]models.Service
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "hello world")
@@ -38,8 +36,22 @@ func healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	service.Healthy = service.CheckHealth()
 	service.Timestamp = time.Now().Format("2006-01-02 15:04:05")
-	services[service.Name] = service
 
+	// Upsert into DB
+	_, err = db.DB.Exec(`
+		INSERT INTO services (name, url, healthy, timestamp)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (name) DO UPDATE
+		SET url=$2, healthy=$3, timestamp=$4`,
+		service.Name, service.URL, service.Healthy, service.Timestamp,
+	)
+	if err != nil {
+		fmt.Println("❌ DB Insert Error:", err)
+		http.Error(w, "Error saving to DB: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("✅ Service saved:", service.Name, "| Healthy:", service.Healthy)
 	json.NewEncoder(w).Encode(service)
 }
 
@@ -49,7 +61,20 @@ func getAllServicesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("total services: ", len(services))
+	rows, err := db.DB.Query(`SELECT id, name, url, healthy, timestamp FROM services`)
+	if err != nil {
+		http.Error(w, "Error querying DB: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	services := []models.Service{}
+	for rows.Next() {
+		var s models.Service
+		rows.Scan(&s.ID, &s.Name, &s.URL, &s.Healthy, &s.Timestamp)
+		services = append(services, s)
+	}
+
 	json.NewEncoder(w).Encode(services)
 }
 
@@ -59,10 +84,28 @@ func runAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for key, value := range services {
-		value.Healthy = value.CheckHealth()
-		value.Timestamp = time.Now().Format("2006-01-02 15:04:05")
-		services[key] = value
+	rows, err := db.DB.Query(`SELECT id, name, url, healthy, timestamp FROM services`)
+	if err != nil {
+		http.Error(w, "Error querying DB: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var services []models.Service
+	for rows.Next() {
+		var s models.Service
+		rows.Scan(&s.ID, &s.Name, &s.URL, &s.Healthy, &s.Timestamp)
+		services = append(services, s)
+	}
+
+	for i, s := range services {
+		services[i].Healthy = s.CheckHealth()
+		services[i].Timestamp = time.Now().Format("2006-01-02 15:04:05")
+
+		db.DB.Exec(`
+			UPDATE services SET healthy=$1, timestamp=$2 WHERE name=$3`,
+			services[i].Healthy, services[i].Timestamp, s.Name,
+		)
 	}
 
 	json.NewEncoder(w).Encode(services)
@@ -70,7 +113,8 @@ func runAll(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	fmt.Println("🚀 DevOps Health Check System")
-	services = make(map[string]models.Service)
+
+	db.Init()
 
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/healthcheck", healthcheckHandler)

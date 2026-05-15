@@ -12,11 +12,8 @@ func PrintStatus(s models.Service) {
 	status := "Healthy"
 
 	if !s.Healthy {
-		status = "Unhealthy"
-		msg := fmt.Sprintf("Name: %s | Port: %d | %s", s.Name, s.Port, status)
-		color.Red(msg)
+		fmt.Printf("%s: %s\n", s.Name, color.RedString(status))
 	} else {
-		msg := fmt.Sprintf("Name: %s | Port: %d | %s", s.Name, s.Port, status)
-		color.HiGreen(msg)
+		fmt.Printf("%s: %s\n", s.Name, color.GreenString(status))
 	}
 }

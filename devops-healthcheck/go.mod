@@ -2,7 +2,10 @@ module github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck
 
 go 1.26.1
 
-require github.com/fatih/color v1.19.0
+require (
+	github.com/fatih/color v1.19.0
+	github.com/lib/pq v1.12.3
+)
 
 require (
 	github.com/mattn/go-colorable v0.1.14 // indirect

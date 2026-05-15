@@ -5,22 +5,18 @@ import (
 	"net/http"
 )
 
-// Service struct definition
 type Service struct {
-	Timestamp   string
-	Name        string
-	Port        int
-	URL         string
-	Healthy     bool
-	Description string
+	ID        int    `json:"ID"`
+	Name      string `json:"Name"`
+	URL       string `json:"URL"`
+	Healthy   bool   `json:"Healthy"`
+	Timestamp string `json:"Timestamp"`
 }
 
-// NewService is a constructor for Service.
 func NewService(name string, url string) Service {
 	return Service{Name: name, URL: url}
 }
 
-// CheckHealth performs an HTTP GET to the service URL and returns true if status is 200.
 func (s Service) CheckHealth() bool {
 	resp, err := http.Get(s.URL)
 	if err != nil {
