@@ -18,7 +18,9 @@ services:
       retries: 5
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: devops-healthcheck
     ports:
       - "8080:8080"
@@ -31,6 +33,16 @@ services:
       DB_USER: admin
       DB_PASSWORD: admin123
       DB_NAME: healthcheck
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    container_name: devops-ui
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
 
 volumes:
   pgdata:
