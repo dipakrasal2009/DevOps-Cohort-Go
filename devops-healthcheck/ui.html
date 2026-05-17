@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevOps Health Check</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0e14;
+      --surface: #111820;
+      --surface2: #161e28;
+      --border: #1e2d3d;
+      --accent: #00d9ff;
+      --accent2: #00ff9d;
+      --danger: #ff4757;
+      --text: #cdd9e5;
+      --text-dim: #546e7a;
+      --text-bright: #e8f4fd;
+      --glow: 0 0 20px rgba(0,217,255,0.15);
+      --glow-green: 0 0 20px rgba(0,255,157,0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,217,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,217,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      padding: 32px 0 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .logo { display: flex; align-items: center; gap: 14px; }
+
+    .logo-icon {
+      width: 42px; height: 42px;
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: var(--glow);
+      animation: pulse-border 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% { box-shadow: var(--glow); }
+      50% { box-shadow: 0 0 30px rgba(0,217,255,0.35); }
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: var(--text-bright); letter-spacing: -0.5px;
+    }
+    .logo-text span { color: var(--accent); }
+
+    .header-meta { font-size: 11px; color: var(--text-dim); text-align: right; }
+
+    .status-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; background: var(--accent2);
+      margin-right: 6px;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px; margin-bottom: 40px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+      position: relative; overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+    }
+    .stat-card.total::before    { background: var(--accent); }
+    .stat-card.healthy::before  { background: var(--accent2); }
+    .stat-card.unhealthy::before{ background: var(--danger); }
+
+    .stat-label {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--text-dim); margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px; font-weight: 800;
+      color: var(--text-bright); line-height: 1;
+    }
+    .stat-card.healthy .stat-value   { color: var(--accent2); }
+    .stat-card.unhealthy .stat-value { color: var(--danger); }
+
+    .main-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 24px; margin-bottom: 40px;
+      animation: fadeUp 0.5s ease 0.1s both;
+    }
+
+    @media (max-width: 700px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 18px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2);
+    }
+
+    .panel-title {
+      font-family: 'Syne', sans-serif; font-size: 13px;
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--text-bright);
+    }
+
+    .panel-body { padding: 24px; }
+
+    .form-group { margin-bottom: 18px; }
+
+    label {
+      display: block; font-size: 10px;
+      text-transform: uppercase; letter-spacing: 2px;
+      color: var(--text-dim); margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px 14px; color: var(--text-bright);
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,217,255,0.08); }
+    input::placeholder { color: var(--text-dim); }
+
+    .btn {
+      width: 100%; padding: 13px; border: none; border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+      cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+    }
+
+    .btn-primary { background: var(--accent); color: #0a0e14; }
+    .btn-primary:hover {
+      background: #00eeff;
+      box-shadow: 0 0 20px rgba(0,217,255,0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: transparent; color: var(--accent2);
+      border: 1px solid var(--accent2); margin-top: 10px;
+    }
+    .btn-secondary:hover {
+      background: rgba(0,255,157,0.08);
+      box-shadow: var(--glow-green); transform: translateY(-1px);
+    }
+
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+    .spinner {
+      display: inline-block; width: 12px; height: 12px;
+      border: 2px solid transparent; border-top-color: currentColor;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      margin-right: 8px; vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      z-index: 999; display: flex; flex-direction: column; gap: 10px;
+    }
+
+    .toast {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 18px; font-size: 12px;
+      min-width: 260px; animation: slideIn 0.3s ease;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast.success { border-left: 3px solid var(--accent2); }
+    .toast.error   { border-left: 3px solid var(--danger); }
+    .toast.info    { border-left: 3px solid var(--accent); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .services-section { animation: fadeUp 0.5s ease 0.2s both; }
+
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif; font-size: 16px;
+      font-weight: 700; color: var(--text-bright);
+    }
+
+    .btn-runall {
+      background: transparent; border: 1px solid var(--accent);
+      color: var(--accent); padding: 10px 20px; border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-runall:hover {
+      background: rgba(0,217,255,0.08);
+      box-shadow: var(--glow); transform: translateY(-1px);
+    }
+    .btn-runall:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--text-dim);
+      background: var(--surface); border: 1px dashed var(--border); border-radius: 16px;
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state p { font-size: 13px; }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .service-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+      animation: cardIn 0.3s ease both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .service-card:hover { border-color: rgba(0,217,255,0.3); transform: translateY(-2px); }
+
+    .service-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; width: 3px; height: 100%;
+      border-radius: 14px 0 0 14px;
+    }
+    .service-card.healthy-card::before   { background: var(--accent2); }
+    .service-card.unhealthy-card::before { background: var(--danger); }
+
+    .card-top {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 14px;
+    }
+
+    .service-name {
+      font-family: 'Syne', sans-serif; font-size: 16px;
+      font-weight: 700; color: var(--text-bright);
+    }
+
+    .health-badge {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 1.5px; padding: 4px 10px;
+      border-radius: 20px; font-weight: 600;
+    }
+    .health-badge.healthy {
+      background: rgba(0,255,157,0.1); color: var(--accent2);
+      border: 1px solid rgba(0,255,157,0.2);
+    }
+    .health-badge.unhealthy {
+      background: rgba(255,71,87,0.1); color: var(--danger);
+      border: 1px solid rgba(255,71,87,0.2);
+    }
+
+    .service-url { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; word-break: break-all; }
+    .service-url a { color: var(--accent); text-decoration: none; }
+    .service-url a:hover { text-decoration: underline; }
+
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 14px; border-top: 1px solid var(--border);
+    }
+
+    .service-id       { font-size: 10px; color: var(--text-dim); }
+    .service-timestamp{ font-size: 10px; color: var(--text-dim); }
+
+    .response-box {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px; font-size: 11px; color: var(--accent2);
+      min-height: 60px; white-space: pre-wrap; word-break: break-all;
+      margin-top: 16px; display: none;
+    }
+    .response-box.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🛰️</div>
+        <div>
+          <div class="logo-text">DevOps <span>HealthCheck</span></div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">Service Monitor v1.0</div>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div><span class="status-dot"></span>API: <span id="api-url-display"></span></div>
+        <div style="margin-top:4px;" id="last-refresh">Last refresh: —</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card total">
+      <div class="stat-label">Total Services</div>
+      <div class="stat-value" id="stat-total">0</div>
+    </div>
+    <div class="stat-card healthy">
+      <div class="stat-label">Healthy</div>
+      <div class="stat-value" id="stat-healthy">0</div>
+    </div>
+    <div class="stat-card unhealthy">
+      <div class="stat-label">Unhealthy</div>
+      <div class="stat-value" id="stat-unhealthy">0</div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+
+    <!-- Add Service -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">+ Register Service</span>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label>Service Name</label>
+          <input type="text" id="svc-name" placeholder="e.g. gateway" />
+        </div>
+        <div class="form-group">
+          <label>Service URL</label>
+          <input type="text" id="svc-url" placeholder="e.g. https://google.com" />
+        </div>
+        <button class="btn btn-primary" id="btn-add" onclick="addService()">
+          Check &amp; Register
+        </button>
+        <div class="response-box" id="add-response"></div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">⚡ Quick Actions</span>
+      </div>
+      <div class="panel-body">
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.7;">
+          Use the actions below to manage all registered services at once.
+        </p>
+        <button class="btn btn-primary" id="btn-fetch" onclick="fetchServices()">
+          🔄 &nbsp;Refresh All Services
+        </button>
+        <button class="btn btn-secondary" id="btn-runall" onclick="runAll()">
+          ▶ &nbsp;Re-run All Health Checks
+        </button>
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">API Endpoints</div>
+          <div style="font-size:11px;line-height:2;color:var(--text-dim);">
+            <span style="color:var(--accent2)">GET</span>  &nbsp;&nbsp;/services<br/>
+            <span style="color:var(--accent)">POST</span> /healthcheck<br/>
+            <span style="color:var(--accent)">POST</span> /runall<br/>
+            <span style="color:var(--accent2)">GET</span>  &nbsp;&nbsp;/
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Services List -->
+  <div class="services-section">
+    <div class="section-header">
+      <div class="section-title">Registered Services</div>
+      <button class="btn-runall" id="btn-runall2" onclick="runAll()">▶ Run All Checks</button>
+    </div>
+    <div id="services-container">
+      <div class="empty-state">
+        <div class="icon">📡</div>
+        <p>No services registered yet.<br/>Add a service above to get started.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:60px;"></div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+  // Auto-detect API URL:
+  // - If opened via Docker UI (port 3000), backend is on port 8080 of the same host
+  // - If opened directly as a file, use localhost:8080
+  const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://' + window.location.hostname + ':8080'
+    : 'http://' + window.location.hostname + ':8080';
+
+  document.getElementById('api-url-display').textContent = API;
+
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+    el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  function setLoading(id, loading, label) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.innerHTML = loading ? `<span class="spinner"></span>Loading...` : label;
+  }
+
+  function updateStats(arr) {
+    const healthy = arr.filter(s => s.Healthy).length;
+    document.getElementById('stat-total').textContent     = arr.length;
+    document.getElementById('stat-healthy').textContent   = healthy;
+    document.getElementById('stat-unhealthy').textContent = arr.length - healthy;
+    document.getElementById('last-refresh').textContent   = 'Last refresh: ' + new Date().toLocaleTimeString();
+  }
+
+  function escHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderServices(services) {
+    const arr = Array.isArray(services) ? services : Object.values(services);
+    const container = document.getElementById('services-container');
+
+    if (!arr || arr.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">📡</div>
+          <p>No services registered yet.<br/>Add a service above to get started.</p>
+        </div>`;
+      updateStats([]);
+      return;
+    }
+
+    updateStats(arr);
+
+    container.innerHTML = `<div class="services-grid">${arr.map((s, i) => `
+      <div class="service-card ${s.Healthy ? 'healthy-card' : 'unhealthy-card'}"
+           style="animation-delay:${i * 0.05}s">
+        <div class="card-top">
+          <div class="service-name">${escHtml(s.Name)}</div>
+          <div class="health-badge ${s.Healthy ? 'healthy' : 'unhealthy'}">
+            ${s.Healthy ? '● Healthy' : '● Unhealthy'}
+          </div>
+        </div>
+        <div class="service-url">
+          <a href="${escHtml(s.URL)}" target="_blank" rel="noopener">${escHtml(s.URL)}</a>
+        </div>
+        <div class="card-footer">
+          <span class="service-id">ID: ${s.ID ?? '—'}</span>
+          <span class="service-timestamp">${s.Timestamp ?? '—'}</span>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  async function fetchServices() {
+    setLoading('btn-fetch', true, '🔄 &nbsp;Refresh All Services');
+    try {
+      const res = await fetch(`${API}/services`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderServices(data);
+      toast('Services refreshed', 'success');
+    } catch (e) {
+      toast('Failed to fetch: ' + e.message, 'error');
+    } finally {
+      setLoading('btn-fetch', false, '🔄 &nbsp;Refresh All Services');
+    }
+  }
+
+  async function addService() {
+    const name = document.getElementById('svc-name').value.trim();
+    const url  = document.getElementById('svc-url').value.trim();
+    if (!name || !url) { toast('Please fill in Name and URL', 'error'); return; }
+
+    const respBox = document.getElementById('add-response');
+    setLoading('btn-add', true, 'Check &amp; Register');
+    respBox.classList.remove('visible');
+
+    try {
+      const res = await fetch(`${API}/healthcheck`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Name: name, URL: url })
+      });
+      const text = await res.text();
+      if (!res.ok) throw new Error(text);
+      const data = JSON.parse(text);
+      respBox.textContent = JSON.stringify(data, null, 2);
+      respBox.classList.add('visible');
+      toast(`${name} — ${data.Healthy ? 'Healthy ✅' : 'Unhealthy ❌'}`, data.Healthy ? 'success' : 'error');
+      document.getElementById('svc-name').value = '';
+      document.getElementById('svc-url').value  = '';
+      fetchServices();
+    } catch (e) {
+      toast('Error: ' + e.message, 'error');
+    } finally {
+      setLoading('btn-add', false, 'Check &amp; Register');
+    }
+  }
+
+  async function runAll() {
+    ['btn-runall', 'btn-runall2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.disabled = true; el.textContent = 'Running...'; }
+    });
+    try {
+      const res = await fetch(`${API}/runall`, { method: 'POST' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderServices(data);
+      toast('All health checks completed', 'success');
+    } catch (e) {
+      toast('Run all failed: ' + e.message, 'error');
+    } finally {
+      const el1 = document.getElementById('btn-runall');
+      const el2 = document.getElementById('btn-runall2');
+      if (el1) { el1.disabled = false; el1.innerHTML = '▶ &nbsp;Re-run All Health Checks'; }
+      if (el2) { el2.disabled = false; el2.textContent = '▶ Run All Checks'; }
+    }
+  }
+
+  document.getElementById('svc-url').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addService();
+  });
+
+  fetchServices();
+</script>
+</body>
+</html>

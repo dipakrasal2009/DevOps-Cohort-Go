@@ -11,6 +11,20 @@ import (
 	"github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck/models"
 )
 
+// corsMiddleware adds CORS headers to all responses
+func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next(w, r)
+	}
+}
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "hello world")
 }
@@ -60,8 +74,6 @@ func getAllServicesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	// Query all services from DB
 
 	rows, err := db.DB.Query(`SELECT id, name, url, healthy, timestamp FROM services`)
 	if err != nil {
@@ -118,10 +130,10 @@ func main() {
 
 	db.Init()
 
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/healthcheck", healthcheckHandler)
-	http.HandleFunc("/services", getAllServicesHandler)
-	http.HandleFunc("/runall", runAll)
+	http.HandleFunc("/", corsMiddleware(homeHandler))
+	http.HandleFunc("/healthcheck", corsMiddleware(healthcheckHandler))
+	http.HandleFunc("/services", corsMiddleware(getAllServicesHandler))
+	http.HandleFunc("/runall", corsMiddleware(runAll))
 
 	fmt.Println("Server running on localhost:8080")
 	http.ListenAndServe(":8080", nil)
