@@ -1,4 +1,3 @@
-
 go 1.25.0
 
 require (
@@ -7,3 +6,5 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 )
+
+module github.com/dipakrasal2009/DevOps-Cohort-Go/devops-healthcheck
