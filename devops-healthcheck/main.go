@@ -60,12 +60,12 @@ func healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 		service.Name, service.URL, service.Healthy, service.Timestamp,
 	)
 	if err != nil {
-		fmt.Println("❌ DB Insert Error:", err)
+		fmt.Println("DB Insert Error:", err)
 		http.Error(w, "Error saving to DB: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println("✅ Service saved:", service.Name, "| Healthy:", service.Healthy)
+	fmt.Println("Service saved:", service.Name, "| Healthy:", service.Healthy)
 	json.NewEncoder(w).Encode(service)
 }
 
@@ -126,7 +126,7 @@ func runAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	fmt.Println("🚀 DevOps Health Check System")
+	fmt.Println("DevOps Health Check System")
 
 	db.Init()
 
