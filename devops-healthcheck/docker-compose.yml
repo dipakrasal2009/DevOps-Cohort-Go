@@ -18,9 +18,7 @@ services:
       retries: 5
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: dipakrasal2009/devops-healthcheck-app:latest
     container_name: devops-healthcheck
     ports:
       - "8080:8080"
@@ -35,9 +33,7 @@ services:
       DB_NAME: healthcheck
 
   ui:
-    build:
-      context: .
-      dockerfile: Dockerfile.ui
+    image: dipakrasal2009/devops-healthcheck-ui:latest
     container_name: devops-ui
     ports:
       - "3000:80"
