@@ -1,0 +1,325 @@
+Dockerfile — Complete Deep Dive
+
+What is a Dockerfile?
+A Dockerfile is a text file containing a sequence of instructions that Docker reads top-to-bottom to build an image. Each instruction creates a new layer in the image (remember OverlayFS — each instruction = one lowerdir layer).
+Dockerfile instruction  →  image layer  →  OverlayFS lowerdir
+
+Dockerfile Instructions — The Full Picture
+dockerfileFROM        # base image to start from
+RUN         # execute a shell command during build
+COPY        # copy files from host into image
+ADD         # like COPY but also handles URLs and tar extraction
+WORKDIR     # set working directory (creates it if missing)
+ENV         # set environment variables
+ARG         # build-time variables (not in final image)
+EXPOSE      # document which port the container listens on
+VOLUME      # declare a mount point
+USER        # set which user runs the process
+LABEL       # add metadata key=value pairs
+HEALTHCHECK # define how Docker checks if container is healthy
+ENTRYPOINT  # the main process (not easily overridden)
+CMD         # default arguments (easily overridden at runtime)
+
+❌ Bad Dockerfile — Everything Wrong
+dockerfileFROM ubuntu:latest
+
+RUN apt-get update
+RUN apt-get install -y curl
+RUN apt-get install -y python3
+RUN apt-get install -y python3-pip
+RUN pip3 install flask
+RUN pip3 install gunicorn
+RUN pip3 install requests
+
+COPY . .
+
+RUN chmod 777 /app
+
+CMD python3 app.py
+What's wrong — line by line
+FROM ubuntu:latest — latest is a moving target. If Ubuntu releases a new version next week, your build breaks silently. Use ubuntu:22.04 — pin it.
+RUN apt-get update on its own line — this layer gets cached separately. Next time you add a package, Docker uses the cached (stale) apt-get update from weeks ago and tries to install from outdated package lists. Always chain update + install in one RUN.
+7 separate RUN pip3 install commands — each RUN creates a new image layer. You now have 7 layers for pip installs that could be 1. More layers = larger image + slower pulls.
+COPY . . — copies everything including .git/, node_modules/, test files, secrets, .env files. No .dockerignore. Potential secret leakage and bloated image.
+RUN chmod 777 /app — world-writable. Security disaster. 777 means any user on the system can write to your app files.
+No WORKDIR — files are copied to / (root of the filesystem). Chaotic.
+CMD python3 app.py — shell form. This runs as sh -c "python3 app.py". Your process is NOT PID 1 — sh is. Signals (SIGTERM, SIGKILL) sent by Docker never reach your app. Graceful shutdown is broken.
+No USER — process runs as root. Container escape = instant root on host.
+
+✅ Good Dockerfile — Everything Right
+dockerfile# Pin exact version — reproducible builds
+FROM python:3.12-slim
+
+# Metadata
+LABEL maintainer="you@example.com"
+LABEL version="1.0.0"
+
+# Set working directory first
+WORKDIR /app
+
+# Copy ONLY dependency files first (cache optimization)
+COPY requirements.txt .
+
+# Chain update + install in ONE RUN — clean apt cache in same layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      curl \
+      gcc \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir -r requirements.txt
+
+# NOW copy app code (changes more often — cache after deps)
+COPY . .
+
+# Create non-root user and own the app directory
+RUN addgroup --system appgroup \
+    && adduser --system --ingroup appgroup appuser \
+    && chown -R appuser:appgroup /app
+
+# Switch to non-root
+USER appuser
+
+# Document the port (informational)
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# exec form entrypoint — PID 1, receives signals correctly
+ENTRYPOINT ["python3", "app.py"]
+What's right — and why
+Pinned base image — python:3.12-slim is smaller than ubuntu + manual Python install, and the version is locked.
+WORKDIR /app first — all subsequent COPY, RUN commands are relative to /app. Clean, predictable.
+COPY requirements.txt . before COPY . . — Docker layer cache trick. Dependencies change rarely, app code changes constantly. By copying requirements.txt first and installing, Docker reuses that cached layer on every code-only change. Massive speed improvement.
+One chained RUN — update + install + cleanup in a single layer. The rm -rf /var/lib/apt/lists/* removes the package index in the same layer so it doesn't bloat the image. If you put that rm in a separate RUN, the index bytes are already committed to a layer and can't be removed.
+--no-install-recommends — installs only what's needed, skips suggested packages.
+--no-cache-dir for pip — pip's download cache is useless in a Docker image. Skip it.
+Non-root user — created with no login shell, no home directory, minimum privileges.
+EXPOSE — documents intent. Doesn't actually open a port, but docker run -P uses it.
+HEALTHCHECK — Docker can restart unhealthy containers automatically.
+Exec form ENTRYPOINT — the critical difference. Explained next.
+
+ENTRYPOINT vs CMD — The Real Difference
+Shell form vs Exec form
+Every RUN, CMD, and ENTRYPOINT has two syntaxes:
+dockerfile# Shell form — runs via /bin/sh -c
+CMD python3 app.py
+# becomes: /bin/sh -c "python3 app.py"
+# PID 1 = sh    ← your app never receives signals
+
+# Exec form — runs directly, no shell
+CMD ["python3", "app.py"]
+# becomes: python3 app.py
+# PID 1 = python3    ← your app receives signals directly
+The difference is catastrophic for production:
+Shell form:
+  PID 1 = /bin/sh
+  PID 2 = python3 app.py   ← SIGTERM from Docker → goes to sh → never forwarded
+
+Exec form:
+  PID 1 = python3 app.py   ← SIGTERM from Docker → directly to your app ✅
+ENTRYPOINT vs CMD behaviour
+dockerfile# Only CMD
+CMD ["python3", "app.py"]
+# docker run myimage             → runs python3 app.py
+# docker run myimage bash        → runs bash (CMD replaced entirely)
+
+# Only ENTRYPOINT
+ENTRYPOINT ["python3"]
+# docker run myimage             → runs python3 (with no args)
+# docker run myimage app.py      → runs python3 app.py
+# docker run myimage bash        → runs python3 bash (weird)
+
+# ENTRYPOINT + CMD together (best pattern)
+ENTRYPOINT ["python3"]
+CMD ["app.py"]
+# docker run myimage             → runs python3 app.py  (default)
+# docker run myimage other.py    → runs python3 other.py  (CMD overridden)
+# docker run --entrypoint bash myimage → runs bash (ENTRYPOINT overridden)
+
+entrypoint.sh — The Shell Script Pattern
+For real production containers, a shell script as entrypoint is common. It lets you do setup work before your main process starts — database migrations, environment validation, secret injection, certificate setup.
+bash#!/bin/sh
+# entrypoint.sh
+set -e   # exit on any error
+
+echo "=== Container starting ==="
+
+# 1. Validate required environment variables
+if [ -z "$DATABASE_URL" ]; then
+  echo "ERROR: DATABASE_URL is not set"
+  exit 1
+fi
+
+if [ -z "$SECRET_KEY" ]; then
+  echo "ERROR: SECRET_KEY is not set"
+  exit 1
+fi
+
+# 2. Wait for database to be ready
+echo "Waiting for database..."
+until pg_isready -h "$DB_HOST" -p "${DB_PORT:-5432}"; do
+  echo "Database not ready — retrying in 2s..."
+  sleep 2
+done
+echo "Database is ready!"
+
+# 3. Run migrations
+echo "Running database migrations..."
+python3 manage.py migrate --noinput
+
+# 4. Collect static files (Django example)
+python3 manage.py collectstatic --noinput
+
+echo "=== Starting application ==="
+
+# 5. exec — THIS IS CRITICAL
+exec "$@"
+Why exec "$@" is everything
+Without exec:
+  PID 1 = sh (entrypoint.sh)
+  PID 2 = python3 app.py
+
+  docker stop → SIGTERM → sent to PID 1 (sh)
+                         sh does nothing with it
+                         waits 10 seconds
+                         SIGKILL → force kills everything
+                         → data corruption, lost requests
+
+With exec:
+  PID 1 = sh (briefly, runs setup)
+  exec replaces PID 1 with:
+  PID 1 = python3 app.py
+
+  docker stop → SIGTERM → sent to PID 1 (python3) ✅
+              → python3 gracefully closes connections
+              → flushes buffers, finishes requests
+              → exits cleanly
+exec "$@" replaces the shell process with whatever command is passed (from Dockerfile's CMD). The shell disappears. Your app becomes PID 1. Signals work correctly.
+dockerfile# In Dockerfile:
+ENTRYPOINT ["./entrypoint.sh"]
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8000"]
+
+# What happens at runtime:
+# 1. entrypoint.sh runs as PID 1
+# 2. Does setup work
+# 3. exec gunicorn app:app --bind 0.0.0.0:8000
+# 4. gunicorn replaces sh as PID 1
+# 5. docker stop → SIGTERM → gunicorn handles it gracefully
+
+SIGTERM vs SIGKILL — The Signal Story
+docker stop <container>
+  │
+  ├── sends SIGTERM to PID 1
+  │     │
+  │     ├── If PID 1 = your app (exec form) → app can clean up ✅
+  │     └── If PID 1 = sh (shell form)      → sh ignores it ❌
+  │
+  └── waits 10 seconds (grace period)
+        │
+        └── if still running → sends SIGKILL (force kill, no escape)
+                               data loss, broken connections, corruption
+SignalCatchable?Default behaviorYour app canSIGTERM (15)✅ YesTerminateCatch, clean up, exit gracefullySIGKILL (9)❌ NoForce killNothing — instant death
+A well-written app catches SIGTERM:
+pythonimport signal
+import sys
+
+def graceful_shutdown(signum, frame):
+    print("SIGTERM received — closing connections...")
+    db.close()
+    cache.close()
+    server.stop(grace=5)
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, graceful_shutdown)
+
+Multistage Dockerfile — Build vs Runtime Separation
+The biggest single image-size optimization. The idea: use one stage to build your app (with all compilers, dev tools, build dependencies) and a separate stage to run it (with only the final binary/artifact).
+dockerfile# ══════════════════════════════════════
+# Stage 1: Builder
+# Heavy image with all build tools
+# ══════════════════════════════════════
+FROM golang:1.22-alpine AS builder
+
+WORKDIR /build
+
+# Copy and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source and build
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd/app
+
+# ══════════════════════════════════════
+# Stage 2: Runtime
+# Tiny image with only the binary
+# ══════════════════════════════════════
+FROM scratch
+
+# Copy ONLY the compiled binary from builder
+COPY --from=builder /build/app /app
+
+# Copy any other needed files (certs, configs)
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app"]
+Image size comparison:
+Single stage (golang:1.22-alpine + source):  ~400 MB
+Multistage  (scratch + binary only):         ~8 MB
+The builder stage is never shipped. It exists only during docker build. Your production image is just the final stage.
+Python Multistage Example
+dockerfile# Stage 1: build dependencies (with compilers)
+FROM python:3.12 AS builder
+
+WORKDIR /build
+COPY requirements.txt .
+
+# Install into a prefix directory, not system Python
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# ──────────────────────────────────────
+# Stage 2: runtime (slim, no gcc/make)
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy app code
+COPY . .
+
+RUN addgroup --system app && adduser --system --ingroup app app
+USER app
+
+EXPOSE 8000
+ENTRYPOINT ["./entrypoint.sh"]
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8000"]
+Three-stage with testing
+dockerfile# Stage 1: base dependencies
+FROM python:3.12-slim AS base
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: test (run during CI, never shipped)
+FROM base AS test
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
+COPY . .
+RUN pytest tests/ -v
+
+# Stage 3: production (only this is pushed to registry)
+FROM base AS production
+COPY . .
+RUN adduser --system appuser
+USER appuser
+ENTRYPOINT ["./entrypoint.sh"]
+CMD ["gunicorn", "app:app"]
+Build only production:
+bashdocker build --target production -t myapp:latest .
+Build and run tests in CI:
+bashdocker build --target test -t myapp:test .
