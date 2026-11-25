@@ -1,0 +1,193 @@
+My Internship period is 16 Jan to 16 Oct
+.........................................
+
+in my internship Project that i have complete one SRE Bootcamp
+in that bootcamp i worked with multiple Devops tools and technology
+Like:
+python  ||  REST API  ||  Postman || Docker || Containerisation || Docker compose || Kubernetes || On-prem 
+|| Git and Github for the versioning || Github Action || CI/CD pipeline ||  Helm charts || Multinode Cluster Setup || Database Postgres || vault and external secrets store || 
+
+
+after completing this bootcamp they give me some task of on of the Real Project 
+that project is to deploy the microservices on the on-premises Air-gapped Enviourment
+client of this project is Globle Logic 
+this microservices is already deployed on the azure and AWS
+
+what we want to do is 
+they are given us a ready cluster that deployed in there data center on airgapped env  it dont have the internet access
+
+after that they give us some task 
+first task that i got is the : write the script for deploy the postgress and kafka on the k8s cluster using the bitnami helm chart
+after that they ask us which technology we use for CI/CD part  at that time our boss said it  we will use the tekton for the CI/CD  because tekton support both CI and CD in one go
+but after that client tell us can you use the Tekton for the CI and the flux for the CD part 
+then it finalise for CI use tekton and the CD part use the flux 
+
+then i Started Learning tekton first and do some automation 
+at the learning fase i have done full CICD pipeline using the tekon that dont need the manual interaction 
+what my pipeline is doing is :
+i have one application that i use the html css and python flask api for the backend 
+i create the docker file for the create the docker image of the application 
+and use the github for the version controle system 
+store everything in the github
+and use the webhooks for the trigger the pipeline
+use ngrok as a webhook for trigger the pipeline as and when developer change the application and push it into the github at that time the pipeline is triggered and first clone the github repo and and build the docker image and push this image into the docker h registory that is hub .docker.com and also at the time of building the image it will take the tag from the git commit ID as tag
+THis is the CI part of the tekton
+
+after the CI part is complete then the CD part is trigger and then pull the image form the docker hub and deploy it into the k8s cluster after new image is deployed successfully at that time the old version is delete
+and the pipeline is done successfully.
+
+This is the CI/CD part using the tekon.
+
+
+
+after this i want to deploy the microservices using the teraform and the
+what i want to do is downloade the microsservices folders and files from the AZURE devops repo
+and then each service i need to create the github repo and the each repo contains the tekton pipeline pipeline files for the deployment and it will have the wehooks also for trigger it also 
+
+from downloading the project files  and creating the repo and push the tekton pipeline file to the github repo and then trigger the pipelin and then build the image and push it into the openshift internal registory  and then deploy it into the openshift cluste everythin is done automated using the terraform
+that is the main thing is everything is done using the terraform
+
+till there i have worked in this project and the my internship is closed.
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+💼 Internship Journey — SRE Bootcamp & DevOps Project
+
+Internship Duration: 16 January to 16 October
+Company/Client: Global Logic (via SRE Bootcamp Program)
+............................................................................................................................................................
+🔹 Phase 1: SRE Bootcamp Training
+
+During the initial phase of my internship, I participated in an intensive SRE (Site Reliability Engineering) Bootcamp, where I gained hands-on experience with multiple DevOps tools and technologies.
+
+Key Tools & Technologies:
+
+Programming & APIs: Python, REST API, Postman
+
+Containerization: Docker, Docker Compose
+
+Orchestration: Kubernetes, Helm Charts, Multinode Cluster Setup
+
+Version Control & CI/CD: Git, GitHub, GitHub Actions, Tekton, FluxCD
+
+Secrets & Storage: Vault, External Secrets Store
+
+Database: PostgreSQL
+
+Infrastructure: On-premises cluster setup, Air-gapped environment
+
+This bootcamp focused on real-world DevOps practices — from containerization and orchestration to automation, CI/CD, and observability.
+..................................................................................................................................................
+🔹 Phase 2: Real-Time Project — Microservices Deployment in Air-Gapped Environment
+
+After completing the bootcamp, I was assigned a real-time project for the client Global Logic.
+The goal was to deploy microservices on an on-premises, air-gapped Kubernetes environment — meaning the environment had no internet access.
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+🔸 Task 1: Kubernetes Setup for Databases
+
+My first task was to automate the deployment of PostgreSQL and Kafka on the Kubernetes cluster using Bitnami Helm charts.
+I wrote a script to handle the entire deployment process, ensuring that it could run efficiently in an air-gapped setup.
+-----------------------------------------------------------------------------------------------------------------------------------
+🔸 Task 2: CI/CD Architecture Setup
+
+Initially, our team planned to use Tekton for both Continuous Integration (CI) and Continuous Deployment (CD).
+Later, based on client requirements, we finalized:
+
+Tekton for CI
+
+FluxCD for CD
+
+This allowed better separation of the build and deployment processes.
+--------------------------------------------------------------------------------------------------------------------
+🔸 Task 3: Tekton CI Pipeline Implementation
+
+To get hands-on with Tekton, I designed and implemented a fully automated CI pipeline with no manual intervention.
+
+Pipeline Workflow:
+
+Developer commits code to GitHub.
+
+A webhook (via ngrok) triggers the Tekton pipeline automatically.
+
+Tekton clones the repository, builds the Docker image, and pushes it to Docker Hub.
+
+The image is tagged using the Git commit ID for version tracking.
+
+This setup completed the CI part — from code commit to image push — seamlessly and automatically.
+---------------------------------------------------------------------------------------------------------------------
+🔸 Task 4: CD Pipeline with FluxCD
+
+Once the new image was pushed to the registry, FluxCD automatically detected the update and:
+
+Pulled the latest image from Docker Hub.
+
+Deployed the new version into the Kubernetes cluster.
+
+Removed the old version after successful deployment.
+
+This created a complete CI/CD pipeline — Tekton handling the build and Flux handling deployment.
+----------------------------------------------------------------------------------------------------------------------------
+🔸 Task 5: Full Automation with Terraform
+
+The next challenge was to automate the entire microservices deployment workflow using Terraform.
+
+Here’s what I achieved:
+
+Fetched microservice source code from Azure DevOps repositories.
+
+Created individual GitHub repositories for each microservice automatically.
+
+Added Tekton pipeline files and webhooks to each repo.
+
+Automated the build, image push to OpenShift internal registry, and deployment to the OpenShift cluster — all through Terraform.
+
+This resulted in end-to-end automation — from source code download to deployment — using Terraform as the orchestrator.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+🔹 Outcome
+
+By the end of my internship, I had:
+
+Built hands-on experience with CI/CD automation, infrastructure-as-code, and container orchestration.
+
+Worked in a real enterprise environment (Global Logic client project).
+
+Gained practical exposure to air-gapped, on-prem Kubernetes deployments.
+
+Developed a strong understanding of DevOps lifecycle and SRE principles.
+
+--------------------------------------------------------------------------------------------------
+
+🧠 Key Learnings
+
+Automating CI/CD using Tekton and FluxCD
+
+Managing Helm deployments in air-gapped Kubernetes clusters
+
+Building end-to-end automation with Terraform
+
+Working with OpenShift, PostgreSQL, Kafka, and Bitnami Helm charts
+
+Importance of versioning, observability, and reliability in production-like environments
+-----------------------------------------------------------------------------------------------------
+🎯 Summary Pitch (for Interview)
+
+“During my internship from January to October, I completed an SRE Bootcamp where I worked with major DevOps tools like Docker, Kubernetes, Helm, Tekton, Flux, and Terraform. After the bootcamp, I contributed to a real client project for Global Logic, where I automated the deployment of microservices on an air-gapped on-prem Kubernetes cluster. I built a full CI/CD pipeline using Tekton for CI and Flux for CD and further automated the entire process using Terraform — from fetching source code to deploying in OpenShift. This project gave me strong hands-on experience in CI/CD automation, infrastructure-as-code, and Kubernetes orchestration.”
+
+
+
+
+
+
+
+
+
+
+
+
+
+
