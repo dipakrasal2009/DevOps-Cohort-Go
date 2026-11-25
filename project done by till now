@@ -1,0 +1,117 @@
+Operating Systems: Ubuntu, RHEL, CentOS, Fedora, Linux Administration
+Cloud & Platforms: AWS (EC2, EKS, ECS, ECR, IAM, VPC, ELB, EBS, S3, ACM, CloudWatch); 
+Azure (Virtual Machines, Azure DevOps, VNet, ACR, Key Vault, Storage, Blob Storage, Load Balancer)
+Version Control	:  Git, Github, bitbucket
+CI/CD : 	Jenkins, GitHub Actions, Azure DevOps, Tekton
+DevOps & Iac Tools: Terraform, Ansible, Docker, Helm, Argo CD, Jenkins, GitHub Actions, Tekton, 
+Security & Vulnerability Management: Trivy, SonarQube, Aikido Security
+Cloud & Infrastructure Security: AWS IAM, Least Privilege, TLS/SSL, Image Scanning, OpenShift
+Monitoring &  SIEM: Prometheus, Grafana, Alertmanager, Node Exporter, CloudWatch
+Containerization & Orchestration: Docker, Kubernetes, Amazon EKS, OpenShift, Helm
+Languages & Scripting: Bash, Python, Git
+
+
+
+
+
+
+Cloud Platforms	  AWS, Azure
+On-Premises	  Linux Servers, Virtual Machines, OpenShift
+Infrastructure as Code	  Terraform
+Configuration Management	 Ansible
+Containerization	  Docker, podman
+Container Orchestration	  Kubernetes (EKS, GKE, OpenShift)
+Container Tools  Helm
+CI/CD  	Jenkins, GitHub Actions, Azure DevOps, Tekton
+GitOps  	ArgoCD
+Version Control	  Git, Github, bitbucket
+Scripting	  Bash, Python, PowerShell
+Monitoring & Observability  	Prometheus, Grafana, Loki, Promtail, Alertmanager, Node Exporter, ELK, CloudWatch
+DevSecOps	  Trivy, SonarQube, Aikido Security
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. SRE Bootcamp – End-to-End DevOps Project
+-Developed and containerized a Python Flask-based Student REST API with PostgreSQL.
+-Configured Docker Compose with multiple API instances and Nginx load balancing.
+-Deployed applications on Kubernetes using YAML manifests.
+-Implemented CI/CD automation using GitHub Actions and infrastructure setup using Vagrant.
+-Application monitoring, health checks, and SRE best practices. 
+
+2. Enterprise CI/CD Automation – GlobalLogic Client Project
+- Designed and implemented an automated CI/CD pipeline using Tekton for CI and FluxCD for CD.
+- Automated Docker image building, tagging, and pushing to container registries using Git webhooks.
+- Used Terraform to automate microservice repository creation, pipeline configuration, and end-to-end deployments.
+- Worked with Kubernetes and OpenShift clusters, including air-gapped, on-premises environments.
+- Gained hands-on experience with Helm, PostgreSQL, Kafka, and infrastructure automation.
+
+3. Aikido Security Scanning – Azure DevOps
+- Implemented automated security scanning using Aikido Security in Azure DevOps pipelines.
+- Configured Pull Request, scheduled, and manual scans across multiple repositories.
+- Integrated Docker-based scanning with vulnerability detection and PR security gating.
+- Automated baseline management to identify and block newly introduced vulnerabilities.
+
+4. Linux Server Migration, CI/CD & Infrastructure Automation
+
+- Working on migrating legacy CentOS servers to Ubuntu across cloud environments.
+- Developing Jenkins CI/CD pipelines to automate Dockerized application deployments.
+- Managing application deployments and automating infrastructure using Terraform and Ansible.
+- Troubleshooting day-to-day server issues, monitoring system performance, and maintaining infrastructure reliability.
+- Supporting infrastructure migration, configuration management, and security automation across Azure and AWS environments.
+
+
+
+Dipak Rasal	1.5	1.5	"1. SRE Bootcamp – End-to-End DevOps Project
+- Developed a Python Flask REST API with PostgreSQL.
+- Containerized services using Docker Compose with Nginx load balancing.
+- Deployed on Kubernetes and automated CI/CD using GitHub Actions.
+- Used Vagrant for infrastructure setup and implemented health checks.
+2. Enterprise CI/CD Automation – GlobalLogic Client Project
+- Implemented CI/CD pipelines using Tekton and FluxCD.
+- Automated Docker image builds, tagging, and deployments using Git webhooks.
+- Used Terraform to automate microservice pipelines and deployments.
+- Worked with Kubernetes, OpenShift, Helm.
+3. Aikido Security Scanning – Azure DevOps (Global Logic)
+- Integrated Aikido security scanning into Azure DevOps pipelines.
+- Configured PR, scheduled, and manual vulnerability scans.
+- Implemented security gating and automated baseline management across repositories.
+4. Linux Server Migration, CI/CD & Infrastructure Automation (cariq)
+- Migrating legacy CentOS servers to Ubuntu across cloud environments.
+- Developing Jenkins pipelines for automated Dockerized application deployments.
+- Automating infrastructure using Terraform and Ansible.
+- Handling daily server troubleshooting, monitoring, and migration activities across AWS and Azure."	"Operating Systems & Linux Administration: Ubuntu, RHEL, CentOS, Linux System Administration
+Cloud Platforms & Services:
+AWS: EC2, EKS, ECS, ECR, IAM, VPC, ELB, EBS, S3, ACM, CloudWatch
+Azure: Virtual Machines, Azure DevOps, VNet, ACR, Key Vault, Azure Storage, Blob Storage, Load Balancer
+Version Control Systems: Git, GitHub, Bitbucket
+CI/CD Tools: Jenkins, GitHub Actions, Azure DevOps, Tekton
+DevOps & Infrastructure as Code (IaC) Tools: Terraform, Ansible, Docker, Helm, Argo CD
+Security & Vulnerability Management: Trivy, SonarQube, Aikido Security
+Cloud & Infrastructure Security: AWS IAM, Least Privilege Access, TLS/SSL, Container Image Scanning, OpenShift Security
+Monitoring & Alerting: Prometheus, Grafana, Alertmanager, Node Exporter, AWS CloudWatch
+Containerization & Orchestration: Docker, Kubernetes, Amazon EKS, OpenShift, Helm
+Programming & Scripting Languages: Bash, Python, C, CPP, Java, Go, JavaScript"	AWS, Azure	yes
+
+
+
